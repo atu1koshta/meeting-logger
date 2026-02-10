@@ -12,6 +12,10 @@ struct MenuBarView: View {
                 trackingView
             case .pendingTitle:
                 titleInputView
+            case .manualEntry:
+                manualEntryView
+            case .editingEntry:
+                editEntryView
             }
         }
         .padding(12)
@@ -41,6 +45,17 @@ struct MenuBarView: View {
                         .foregroundColor(.green)
                         .font(.title3)
                     Text("Start Meeting")
+                        .fontWeight(.medium)
+                }
+            }
+            .buttonStyle(.plain)
+
+            Button(action: { state.startManualEntry() }) {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundColor(.blue)
+                        .font(.title3)
+                    Text("Log Manually")
                         .fontWeight(.medium)
                 }
             }
@@ -148,6 +163,82 @@ struct MenuBarView: View {
         }
     }
 
+    // MARK: - Manual Entry
+
+    private var manualEntryView: some View {
+        meetingFormView(header: "Log Meeting", saveAction: { state.saveManualEntry() })
+    }
+
+    // MARK: - Edit Entry
+
+    private var editEntryView: some View {
+        meetingFormView(header: "Edit Meeting", saveAction: { state.saveEdit() })
+    }
+
+    private func meetingFormView(header: String, saveAction: @escaping () -> Void) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(header)
+                .font(.headline)
+
+            Divider()
+
+            DatePicker("Date", selection: $state.manualDate, displayedComponents: .date)
+                .datePickerStyle(.compact)
+                .font(.subheadline)
+
+            DatePicker("Start", selection: $state.manualStartTime, displayedComponents: .hourAndMinute)
+                .font(.subheadline)
+
+            DatePicker("End", selection: $state.manualEndTime, displayedComponents: .hourAndMinute)
+                .font(.subheadline)
+
+            HStack {
+                Text("Duration")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                Spacer()
+                Text(state.manualDurationFormatted)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
+
+            Divider()
+
+            Text("Meeting title")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            TextField("e.g. Standup, Sprint Review...", text: $state.meetingTitle)
+                .textFieldStyle(.roundedBorder)
+                .onSubmit {
+                    saveAction()
+                }
+
+            HStack(spacing: 8) {
+                Button("Cancel") {
+                    state.cancelEntry()
+                }
+                .buttonStyle(.plain)
+                .foregroundColor(.secondary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(6)
+
+                Button("Save") {
+                    saveAction()
+                }
+                .buttonStyle(.plain)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+                .background(Color.accentColor)
+                .cornerRadius(6)
+            }
+            .padding(.top, 2)
+        }
+    }
+
     // MARK: - Today's Meetings
 
     private var todaysList: some View {
@@ -179,6 +270,10 @@ struct MenuBarView: View {
                         }
                     }
                     .padding(.vertical, 1)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        state.startEditing(entry)
+                    }
                 }
 
                 let totalMinutes = state.todaysEntries.reduce(0) { $0 + $1.durationMinutes }

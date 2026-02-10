@@ -133,6 +133,51 @@ final class CSVLogger {
         return fields
     }
 
+    func updateMeeting(original: MeetingEntry, newStart: Date, newEnd: Date, newTitle: String) throws {
+        try ensureFileExists()
+
+        let existing = try String(contentsOf: fileURL, encoding: .utf8)
+        let lines = existing.components(separatedBy: "\n").filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
+        let newDateStr = dateFormatter.string(from: newStart)
+        let newStartStr = timeFormatter.string(from: newStart)
+        let newEndStr = timeFormatter.string(from: newEnd)
+        let newDurationMinutes = Int(newEnd.timeIntervalSince(newStart) / 60)
+        let newDurationHours = String(format: "%.2f", newEnd.timeIntervalSince(newStart) / 3600)
+        let safeTitle = csvEscape(newTitle)
+        let newRow = "\(newDateStr),\(newStartStr),\(newEndStr),\(newDurationHours),\(newDurationMinutes),\(safeTitle)"
+
+        var output: [String] = []
+        var replaced = false
+
+        for line in lines {
+            if line == header {
+                output.append(line)
+                continue
+            }
+            if !replaced {
+                let cols = parseCSVRow(line)
+                if cols.count >= 5,
+                   cols[0] == original.date,
+                   cols[1] == original.startTime,
+                   cols[2] == original.endTime {
+                    output.append(newRow)
+                    replaced = true
+                    continue
+                }
+            }
+            output.append(line)
+        }
+
+        if !replaced {
+            // If original row wasn't found, append as new entry
+            output.insert(newRow, at: 1)
+        }
+
+        output.append("") // trailing newline
+        try output.joined(separator: "\n").write(to: fileURL, atomically: true, encoding: .utf8)
+    }
+
     func openLogFile() {
         NSWorkspace.shared.open(fileURL)
     }

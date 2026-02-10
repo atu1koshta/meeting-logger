@@ -47,13 +47,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             .store(in: &cancellables)
 
-        // Keep popover open during title input (override transient close)
+        // Keep popover open during title input, manual entry, and editing
         state.$phase
             .receive(on: RunLoop.main)
             .sink { [weak self] phase in
-                if phase == .pendingTitle {
+                switch phase {
+                case .pendingTitle, .manualEntry, .editingEntry:
                     self?.popover.behavior = .applicationDefined
-                } else {
+                default:
                     self?.popover.behavior = .transient
                 }
             }
