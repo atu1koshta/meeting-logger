@@ -122,9 +122,23 @@ struct MenuBarView: View {
                     .font(.headline)
             }
 
-            Text(state.formattedDuration)
+            Divider()
+
+            DatePicker("Start", selection: $state.manualStartTime, displayedComponents: .hourAndMinute)
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+
+            DatePicker("End", selection: $state.manualEndTime, displayedComponents: .hourAndMinute)
+                .font(.subheadline)
+
+            HStack {
+                Text("Duration")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                Spacer()
+                Text(state.manualDurationFormatted)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
 
             Divider()
 
@@ -259,7 +273,7 @@ struct MenuBarView: View {
                             Text("\(entry.startTime) - \(entry.endTime)")
                                 .font(.system(.caption, design: .monospaced))
                             Spacer()
-                            Text("\(entry.durationMinutes) min")
+                            Text(formattedDuration(entry.durationMinutes))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -282,13 +296,24 @@ struct MenuBarView: View {
                         .font(.caption)
                         .fontWeight(.semibold)
                     Spacer()
-                    Text("\(totalMinutes) min")
+                    Text(formattedDuration(totalMinutes))
                         .font(.caption)
                         .fontWeight(.semibold)
                 }
                 .padding(.top, 2)
             }
         }
+    }
+
+    // MARK: - Helpers
+
+    private func formattedDuration(_ minutes: Int) -> String {
+        let h = minutes / 60
+        let m = minutes % 60
+        if h > 0 {
+            return m > 0 ? "\(h)h \(m)m" : "\(h)h"
+        }
+        return "\(m)m"
     }
 
     // MARK: - Footer

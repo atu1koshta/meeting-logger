@@ -58,14 +58,14 @@ final class MeetingState: ObservableObject {
         timer?.invalidate()
         timer = nil
         endTime = Date()
+        manualStartTime = startTime ?? Date()
+        manualEndTime = endTime ?? Date()
         phase = .pendingTitle
     }
 
     func saveMeeting(title: String) {
-        if let start = startTime, let end = endTime {
-            let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
-            try? logger.logMeeting(start: start, end: end, title: trimmed)
-        }
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        try? logger.logMeeting(start: manualStartTime, end: manualEndTime, title: trimmed)
         resetToIdle()
     }
 
