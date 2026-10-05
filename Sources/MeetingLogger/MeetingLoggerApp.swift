@@ -47,6 +47,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             .store(in: &cancellables)
 
+        // Show this week's total meeting time next to the menu bar icon
+        state.$weekTotalMinutes
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.updateTitle()
+            }
+            .store(in: &cancellables)
+
         // Keep popover open during title input, manual entry, and editing
         state.$phase
             .receive(on: RunLoop.main)
@@ -59,6 +67,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
             .store(in: &cancellables)
+    }
+
+    private func updateTitle() {
+        guard let button = statusItem.button else { return }
+        button.title = state.weekTotalMinutes > 0 ? " \(state.weekTotalFormatted)" : ""
+        button.imagePosition = .imageLeading
     }
 
     private func updateIcon() {

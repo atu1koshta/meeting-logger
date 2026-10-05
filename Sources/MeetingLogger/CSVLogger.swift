@@ -79,11 +79,26 @@ final class CSVLogger {
     }
 
     func todaysEntries() -> [MeetingEntry] {
+        let today = dateFormatter.string(from: Date())
+        return entries { $0 == today }
+    }
+
+    /// Entries from the current calendar week (uses the system calendar's first weekday).
+    func thisWeeksEntries() -> [MeetingEntry] {
+        guard let week = Calendar.current.dateInterval(of: .weekOfYear, for: Date()) else {
+            return todaysEntries()
+        }
+        return entries { dateStr in
+            guard let date = dateFormatter.date(from: dateStr) else { return false }
+            return week.contains(date)
+        }
+    }
+
+    private func entries(matching dateFilter: (String) -> Bool) -> [MeetingEntry] {
         guard let contents = try? String(contentsOf: fileURL, encoding: .utf8) else {
             return []
         }
 
-        let today = dateFormatter.string(from: Date())
         var entries: [MeetingEntry] = []
 
         for line in contents.components(separatedBy: "\n") {
@@ -91,7 +106,7 @@ final class CSVLogger {
             guard !trimmed.isEmpty, trimmed != header else { continue }
 
             let cols = parseCSVRow(trimmed)
-            guard cols.count >= 5, cols[0] == today else { continue }
+            guard cols.count >= 5, dateFilter(cols[0]) else { continue }
 
             entries.append(MeetingEntry(
                 date: cols[0],

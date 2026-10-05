@@ -15,6 +15,7 @@ final class MeetingState: ObservableObject {
     @Published var endTime: Date?
     @Published var elapsedSeconds: Int = 0
     @Published var todaysEntries: [MeetingEntry] = []
+    @Published var weekTotalMinutes: Int = 0
     @Published var meetingTitle: String = ""
     @Published var manualDate: Date = Date()
     @Published var manualStartTime: Date = Date()
@@ -84,6 +85,20 @@ final class MeetingState: ObservableObject {
 
     func refreshTodaysEntries() {
         todaysEntries = logger.todaysEntries()
+        weekTotalMinutes = logger.thisWeeksEntries().reduce(0) { $0 + $1.durationMinutes }
+    }
+
+    var weekTotalFormatted: String {
+        MeetingState.formatMinutes(weekTotalMinutes)
+    }
+
+    static func formatMinutes(_ minutes: Int) -> String {
+        let h = minutes / 60
+        let m = minutes % 60
+        if h > 0 {
+            return m > 0 ? "\(h)h \(m)m" : "\(h)h"
+        }
+        return "\(m)m"
     }
 
     var formattedElapsed: String {

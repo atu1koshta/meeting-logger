@@ -302,18 +302,24 @@ struct MenuBarView: View {
                 }
                 .padding(.top, 2)
             }
+
+            HStack {
+                Text("This week")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                Spacer()
+                Text(state.weekTotalFormatted)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+            }
+            .padding(.top, 2)
         }
     }
 
     // MARK: - Helpers
 
     private func formattedDuration(_ minutes: Int) -> String {
-        let h = minutes / 60
-        let m = minutes % 60
-        if h > 0 {
-            return m > 0 ? "\(h)h \(m)m" : "\(h)h"
-        }
-        return "\(m)m"
+        MeetingState.formatMinutes(minutes)
     }
 
     // MARK: - Footer
